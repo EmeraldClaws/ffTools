@@ -1,0 +1,44 @@
+#!/usr/bin/env php
+<?php
+if (sizeof($argv) < 2) {
+  exit("No input supplied, exiting...");
+}
+
+echo("Extracting subtitles from ".$argv[1]."\n");
+
+$probeOutput = shell_exec('ffprobe "'.$argv[1].'" 2>&1');
+$regex = "/Stream.#([0].([0-9]))\(?([a-z]*)?\)?: (Video|Audio|Subtitle): ([a-z0-9_]*)/";
+preg_match_all($regex, $probeOutput, $allStreams);
+
+$subtitleID = 0;
+foreach ($allStreams[4] as $key => $value) {
+	if ($value == "Subtitle") {
+		$subtitleID = $key;
+		break;
+	}
+}
+$subtitleFileName = substr($argv[1], 0, -3).'srt';
+shell_exec('ffmpeg -i "'.$argv[1].'" -map 0:s:0 "'.$subtitleFileName.'"');
+system("nano ".escapeshellarg($subtitleFileName)." > `tty`");
+
+$ffcommand = "ffmpeg -i ".escapeshellarg($argv[1])." -i ".escapeshellarg($subtitleFileName)." -hide_banner -movflags faststart -map_metadata 0 ";
+
+foreach ($allStreams[0] as $streamID => $value) {
+	if ($streamID == $subtitleID) {
+		$ffcommand .= "-map 1:0 -c:".$streamID." mov_text ";
+	} else {
+		$ffcommand .= "-map 0:".$streamID." -c:".$streamID." copy ";
+	}
+}
+
+$outputFileName = escapeshellarg(substr($argv[1], 0, -4)."_out.mp4");
+$ffcommand .= $outputFileName;
+
+echo "\n".$ffcommand."\n";
+
+if (readline("Remux? (y): ") == "y") {
+  exec($ffcommand);
+}
+
+shell_exec('mv '.$outputFileName." ".escapeshellarg($argv[1]));
+unlink($subtitleFileName);
