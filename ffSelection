@@ -13,7 +13,8 @@ $formats = [
 ];
 
 $outputFileType = "mp4";
-$ffmpegCommand = "ffmpeg";
+$ffmpegPrefix = "nice -n 5 ";
+$ffmpegCommand = $ffmpegPrefix."ffmpeg";
 $ffmpegCommand .= " \\\n";
 
 $streams = [];
@@ -40,7 +41,6 @@ for ($inputFileIndex=1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
 }
 
 $ffmpegCommand .= " -hide_banner -movflags -faststart -map_metadata 0 \\\n";
-// var_dump($streams);
 
 $selectedStreams = [];
 $selectedStreamCount = 0;
@@ -90,6 +90,6 @@ foreach ($streams as $streamType => $streamArray) {
 $ffmpegCommand.= ' "'.substr($argv[1], 0, -4).'_output.'.$outputFileType.'"';
 echo "\n\n\n$ffmpegCommand\n\n";
 
-if (readline("Remux? (y): ") == "y") {
+if (readline("Remux? (y/[n]): ") == "y") {
 	exec($ffmpegCommand);
 }

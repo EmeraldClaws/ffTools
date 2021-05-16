@@ -36,7 +36,7 @@ $ffcommand .= $outputFileName;
 
 echo "\n".$ffcommand."\n";
 
-if (readline("Remux? (y): ") == "y") {
+if (readline("Remux? (y/[n]): ") == "y") {
   exec($ffcommand);
 }
 
