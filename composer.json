@@ -1,0 +1,17 @@
+{
+  "name": "emeraldclaws/ff-tools",
+  "autoload": {
+    "psr-4": {
+      "Emeraldclaws\\Fftools\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Alex Copland",
+      "email": "alex@cop.land"
+    }
+  ],
+  "require": {
+    "ext-readline": "*"
+  }
+}
