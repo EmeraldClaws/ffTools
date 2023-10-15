@@ -15,6 +15,7 @@ PHP must have `exec()` and `shell_exec()` enabled for use on the command line.
 ```
 git clone https://github.com/EmeraldClaws/ffTools.git
 cd ffTools/commands
+composer install
 ```
 
 ## Running
