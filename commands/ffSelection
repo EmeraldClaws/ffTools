@@ -1,0 +1,150 @@
+#!/usr/bin/env php
+<?php
+
+use Emeraldclaws\Fftools\Classes\Streams\Stream;
+use Emeraldclaws\Fftools\Data\Ffprobe\FfprobeData;
+use Emeraldclaws\Fftools\Enums\Codecs\CodecTypeEnum;
+use Emeraldclaws\Fftools\Helpers\File;
+use Emeraldclaws\Fftools\Helpers\Shell;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+if (sizeof($argv) < 2) {
+    echo("No input supplied, exiting...");
+    exit;
+}
+
+$formats = [
+    "video" => ["h264", "hevc"],
+    "audio" => ["aac"],
+    "subtitle" => ["mov_text"],
+    "data" => ["bin_data"],
+];
+
+$streams = [];
+$streamsByCodec = [];
+
+/** @var FfprobeData[] $parsedFiles */
+$parsedFiles = [];
+$selectedStreams = [];
+
+echo "Probing Files\n";
+for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
+    echo "\tProbing $argv[$inputFileIndex]\n";
+    $parsedFile = File::probe($argv[$inputFileIndex]);
+
+    $parsedFiles[] = $parsedFile;
+
+    $selectedStreams[$inputFileIndex] = [];
+    foreach ($parsedFile->getAllStreams() as $stream) {
+        echo "\t\tFound {$stream->getCodecType()->value} codec: {$stream->getCodecName()}: {$stream->getCodecNameEnum()->getLongName()}\n";
+        $selectedStreams[$inputFileIndex][$stream->getIndex()] = false;
+    }
+}
+
+//Stream selection
+$selectedStreams = [];
+foreach (CodecTypeEnum::cases() as $codecType) {
+    echo "-----------------------------------------\n";
+    echo "Starting $codecType->value stream section\n\n";
+
+    //Build array of streams for this codec type
+    $streamsForCodecType = [];
+    foreach ($parsedFiles as $fileIndex => $parsedFile) {
+        foreach ($parsedFile->getStreamsByType($codecType) as $stream) {
+            $streamsForCodecType[] = [
+                'fileIndex' => $fileIndex,
+                'stream' => $stream,
+            ];
+        }
+    }
+
+    while (true) {
+        if (sizeof($streamsForCodecType) == 0)
+            break;
+
+        //List streams for file type
+        foreach ($streamsForCodecType as $streamForCodecTypeIndex => $streamForCodecTypeArray) {
+            /** @var int $fileIndex */
+            $fileIndex = $streamForCodecTypeArray['fileIndex'];
+
+            /** @var Stream $stream */
+            $stream = $streamForCodecTypeArray['stream'];
+
+            if (
+                    !isset($selectedStreams[$fileIndex])
+                    || !isset($selectedStreams[$fileIndex][$stream->getIndex()])
+            ) {
+                echo "\t[" . str_pad($streamForCodecTypeIndex, 2, " ", STR_PAD_LEFT) . "]"
+                    . "\t($fileIndex:{$stream->getIndex()})"
+                    . "\t{$stream->getCodecName()}\n";
+            }
+        }
+
+        //Take input
+        $selection = readline("  Enter your selection [#]: ");
+        echo "\n";
+
+        //If no input, break
+        if ($selection == "")
+            break;
+
+        //If invalid input, try again
+        if (!isset($streamsForCodecType))
+            continue;
+
+        /** @var Stream $selectedStream */
+        $selectedStream = $streamsForCodecType[$selection]['stream'];
+        $selectedStreamFileIndex = $streamsForCodecType[$selection]['fileIndex'];
+
+        //Make sure the selectedStreams array has an entry for the file
+        if (!isset($selectedStreams[$selectedStreamFileIndex]))
+            $selectedStreams[$selectedStreamFileIndex] = [];
+
+        $selectedStreams[$selectedStreamFileIndex][$selectedStream->getIndex()] = $selectedStream;
+        unset($streamsForCodecType[$selection]);
+    }
+
+    echo "Finishing $codecType->value stream selection\n";
+}
+
+//Build ffmpeg command
+$outputFileType = "mp4";
+$ffmpegPrefix = "nice -n 5 \\\n";
+$ffmpegCommand = "{$ffmpegPrefix}ffmpeg -hide_banner -movflags -faststart -map_metadata 0 \\\n";
+
+for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
+    $ffmpegCommand .= "\t-i ".escapeshellarg($argv[$inputFileIndex])." \\\n";
+}
+
+$streamCount = 0;
+//It's nice to have ordered codecs
+foreach (CodecTypeEnum::cases() as $codecType) {
+    foreach ($selectedStreams as $fileIndex => $streams) {
+        /** @var Stream[] $streams */
+        foreach ($streams as $stream) {
+            if ($codecType != $stream->getCodecType())
+                continue;
+
+            //Push file/stream to ffmpegCommand
+            $ffmpegCommand .= "\t-map $fileIndex:{$stream->getIndex()} -c:$streamCount";
+
+            //Check stream is allowed
+            if (in_array($stream->getCodecName(), $formats[$stream->getCodecType()->value]))
+                $ffmpegCommand .= " copy";
+            else
+                $ffmpegCommand .= " {$formats[$stream->getCodecType()->value][0]}";
+
+            $ffmpegCommand .= " \\\n";
+            $streamCount++;
+        }
+    }
+}
+
+$ffmpegCommand .= "\t".escapeshellarg(substr($argv[1], 0, -4). "_output.{$outputFileType}");
+echo $ffmpegCommand;
+
+echo "\n\n";
+if (readline("Remux? (y/[n]): ") == "y") {
+    Shell::exec($ffmpegCommand);
+}
