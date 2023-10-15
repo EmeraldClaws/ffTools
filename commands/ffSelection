@@ -111,11 +111,13 @@ foreach (CodecTypeEnum::cases() as $codecType) {
 //Build ffmpeg command
 $outputFileType = "mp4";
 $ffmpegPrefix = "nice -n 5 \\\n";
-$ffmpegCommand = "{$ffmpegPrefix}ffmpeg -hide_banner -movflags -faststart -map_metadata 0 \\\n";
+$ffmpegCommand = "{$ffmpegPrefix}ffmpeg\\\n";
 
 for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
-    $ffmpegCommand .= "\t-i " . escapeshellarg($argv[$inputFileIndex]) . " \\\n";
+    $ffmpegCommand .= "\t-i \"$argv[$inputFileIndex]\" \\\n";
 }
+
+$ffmpegCommand .= "\t-hide_banner -movflags -faststart -map_metadata 0 \\\n";
 
 $streamCount = 0;
 //It's nice to have ordered codecs
