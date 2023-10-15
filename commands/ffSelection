@@ -37,7 +37,7 @@ for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
 
     $selectedStreams[$inputFileIndex] = [];
     foreach ($parsedFile->getAllStreams() as $stream) {
-        echo "\t\tFound {$stream->getCodecType()->value} codec: {$stream->getCodecName()}: {$stream->getCodecNameEnum()->getLongName()}\n";
+        echo "\t\tFound {$stream->getCodecType()->value} codec: {$stream->getCodecName()}\n";
         $selectedStreams[$inputFileIndex][$stream->getIndex()] = false;
     }
 }
@@ -72,12 +72,12 @@ foreach (CodecTypeEnum::cases() as $codecType) {
             $stream = $streamForCodecTypeArray['stream'];
 
             if (
-                    !isset($selectedStreams[$fileIndex])
-                    || !isset($selectedStreams[$fileIndex][$stream->getIndex()])
+                !isset($selectedStreams[$fileIndex])
+                || !isset($selectedStreams[$fileIndex][$stream->getIndex()])
             ) {
                 echo "\t[" . str_pad($streamForCodecTypeIndex, 2, " ", STR_PAD_LEFT) . "]"
                     . "\t($fileIndex:{$stream->getIndex()})"
-                    . "\t{$stream->getCodecName()}\n";
+                    . "\t{$stream->getCodecName()}  ({$stream->getTag('language')})\n";
             }
         }
 
@@ -114,7 +114,7 @@ $ffmpegPrefix = "nice -n 5 \\\n";
 $ffmpegCommand = "{$ffmpegPrefix}ffmpeg -hide_banner -movflags -faststart -map_metadata 0 \\\n";
 
 for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
-    $ffmpegCommand .= "\t-i ".escapeshellarg($argv[$inputFileIndex])." \\\n";
+    $ffmpegCommand .= "\t-i " . escapeshellarg($argv[$inputFileIndex]) . " \\\n";
 }
 
 $streamCount = 0;
@@ -141,7 +141,7 @@ foreach (CodecTypeEnum::cases() as $codecType) {
     }
 }
 
-$ffmpegCommand .= "\t".escapeshellarg(substr($argv[1], 0, -4). "_output.{$outputFileType}");
+$ffmpegCommand .= "\t" . escapeshellarg(substr($argv[1], 0, -4) . "_output.{$outputFileType}");
 echo $ffmpegCommand;
 
 echo "\n\n";

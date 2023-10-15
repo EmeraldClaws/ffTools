@@ -48,15 +48,10 @@ abstract class Stream
         return $this->index;
     }
 
-    public function hasTag(string $tag): bool
-    {
-        return (bool)array_search($tag, $this->tags);
-    }
-
     public function getTag(string $tag): string|null
     {
-        if ($this->hasTag($tag))
-            return $this->tags[array_search($tag, $this->tags)];
+        if (!is_null($this->tags) && isset($this->tags[$tag]))
+            return $this->tags[$tag];
 
         return null;
     }
