@@ -4,7 +4,7 @@ ffTools is a collection of small scripts designed to simplify the process of tra
 
 ## Requirements
 
-- `php7`
+- `php8.1`
 - `ffmpeg`
 - `nano`
 
@@ -14,7 +14,7 @@ PHP must have `exec()` and `shell_exec()` enabled for use on the command line.
 
 ```
 git clone https://github.com/EmeraldClaws/ffTools.git
-cd ffTools
+cd ffTools/commands
 ```
 
 ## Running
