@@ -9,6 +9,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
     case AAC = 'aac';
     case AC3 = 'ac3';
     case DTS = 'dts';
+    case EAC3 = 'eac3';
 
     public function getLongName(): string
     {
@@ -16,6 +17,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
             self::AAC => "AAC (Advanced Audio Coding)",
             self::AC3 => "ATSC A/52A (AC-3)",
             self::DTS => "DCA (DTS Coherent Acoustics)",
+            self::EAC3 => "ATSC A/52B (AC-3, E-AC-3)",
         };
     }
 
