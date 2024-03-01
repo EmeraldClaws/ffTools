@@ -11,6 +11,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
     case DTS = 'dts';
     case EAC3 = 'eac3';
     case OPUS = 'opus';
+    case PCM_S16LE = 'pcm_s16le';
 
     public function getLongName(): string
     {
@@ -20,6 +21,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
             self::DTS => "DCA (DTS Coherent Acoustics)",
             self::EAC3 => "ATSC A/52B (AC-3, E-AC-3)",
             self::OPUS => "Opus (Opus Interactive Audio Codec)",
+            self::PCM_S16LE => 'PCM signed 16-bit little-endian',
         };
     }
 
