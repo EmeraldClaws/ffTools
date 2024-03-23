@@ -15,7 +15,7 @@ if (sizeof($argv) < 2) {
 }
 
 $formats = [
-    "video" => ["h264", "hevc"],
+    "video" => ["h264", "hevc", "mjpeg"],
     "audio" => ["aac"],
     "subtitle" => ["mov_text"],
     "data" => ["bin_data"],
