@@ -41,16 +41,18 @@ for ($inputFileIndex = 1; $inputFileIndex < sizeof($argv); $inputFileIndex++) {
         $selectedStreams[$inputFileIndex][$stream->getIndex()] = false;
     }
 }
+echo "-----------------------------------------\n";
 
 //Stream selection
 $selectedStreams = [];
 foreach (CodecTypeEnum::cases() as $codecType) {
-    echo "-----------------------------------------\n";
-    echo "Starting $codecType->value stream section\n\n";
-
     //Build array of streams for this codec type
     $streamsForCodecType = [];
     foreach ($parsedFiles as $fileIndex => $parsedFile) {
+        if (!sizeof($parsedFile->getStreamsByType($codecType))){
+            continue 2;
+        }
+
         foreach ($parsedFile->getStreamsByType($codecType) as $stream) {
             $streamsForCodecType[] = [
                 'fileIndex' => $fileIndex,
@@ -58,6 +60,8 @@ foreach (CodecTypeEnum::cases() as $codecType) {
             ];
         }
     }
+
+    echo "Starting $codecType->value stream section\n\n";
 
     while (true) {
         if (sizeof($streamsForCodecType) == 0)
@@ -106,6 +110,7 @@ foreach (CodecTypeEnum::cases() as $codecType) {
     }
 
     echo "Finishing $codecType->value stream selection\n";
+    echo "-----------------------------------------\n";
 }
 
 //Build ffmpeg command
