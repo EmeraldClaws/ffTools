@@ -1,0 +1,73 @@
+#!/usr/bin/env php
+<?php
+
+use Emeraldclaws\Fftools\Classes\Streams\Stream;
+use Emeraldclaws\Fftools\Data\Ffprobe\FfprobeData;
+use Emeraldclaws\Fftools\Enums\Codecs\CodecTypeEnum;
+use Emeraldclaws\Fftools\Helpers\File;
+use Emeraldclaws\Fftools\Helpers\Shell;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+$formats = [
+    "video" => ["h264", "hevc", "mjpeg"],
+    "audio" => ["aac"],
+    "subtitle" => ["mov_text"],
+    "data" => ["bin_data"],
+];
+
+$fileTypes = [
+    'mp4',
+];
+
+if (sizeof($argv) < 2) {
+    $directory = $_SERVER['PWD'];
+} else {
+    $directory = $argv[1];
+}
+echo("Scanning $directory\n");
+
+
+$files = scandir($directory);
+$files = array_slice($files, 2); //Drop current and parent directory
+
+//Get the longest file name - it'll make the output look better
+$longestFileName = 0;
+foreach ($files as $fileName) {
+    $fileNameLength = strlen($fileName);
+    if ($fileNameLength > $longestFileName) {
+        $longestFileName = $fileNameLength;
+    }
+}
+
+$failedFiles = [];
+foreach ($files as $fileName) {
+    echo "\r" . str_repeat(' ', $longestFileName) . "\r";
+    echo "$fileName";
+
+    $parsedFile = File::probe($fileName);
+
+    $failed = !in_array(pathinfo($fileName, PATHINFO_EXTENSION), $fileTypes);
+
+    if (!$failed) {
+        foreach ($parsedFile->getAllStreams() as $stream) {
+            if (!in_array($stream->getCodecName(), $formats[$stream->getCodecType()->value])) {
+                $failed = true;
+                break;
+            }
+        }
+    }
+
+    if ($failed) {
+        $failedFiles[] = $fileName;
+        echo "\r" . str_pad($fileName, $longestFileName) . " Failed\n";
+    }
+}
+
+if (!sizeof($failedFiles)) {
+    echo "\r" . str_repeat(' ', $longestFileName) . "\r\n";
+    echo "All files passed check";
+    exit;
+}
+
+echo sizeof($failedFiles) ."/". sizeof($files) . " failed";
