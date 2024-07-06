@@ -50,7 +50,7 @@ foreach (CodecTypeEnum::cases() as $codecType) {
     $streamsForCodecType = [];
     foreach ($parsedFiles as $fileIndex => $parsedFile) {
         if (!sizeof($parsedFile->getStreamsByType($codecType))){
-            continue 2;
+            continue;
         }
 
         foreach ($parsedFile->getStreamsByType($codecType) as $stream) {
