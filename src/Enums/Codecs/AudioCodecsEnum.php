@@ -10,6 +10,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
     case AC3 = 'ac3';
     case DTS = 'dts';
     case EAC3 = 'eac3';
+    case MP3 = 'mp3';
     case OPUS = 'opus';
     case PCM_S16LE = 'pcm_s16le';
 
@@ -20,6 +21,7 @@ enum AudioCodecsEnum: string implements StreamCodecInterface
             self::AC3 => "ATSC A/52A (AC-3)",
             self::DTS => "DCA (DTS Coherent Acoustics)",
             self::EAC3 => "ATSC A/52B (AC-3, E-AC-3)",
+            self::MP3 => "MP3 (MPEG audio layer 3)",
             self::OPUS => "Opus (Opus Interactive Audio Codec)",
             self::PCM_S16LE => 'PCM signed 16-bit little-endian',
         };
